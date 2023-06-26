@@ -36,7 +36,7 @@ func GetOpenAIToken() (string, error) {
 	// bw = Math.round(bt - (bt % 21600)
 	bw := strconv.FormatInt(bt-(bt%21600), 10)
 	bv := "Mozilla/5.0 (X11; Linux x86_64; rv:114.0) Gecko/20100101 Firefox/114.0"
-	bda := Encrypt(bx, bv+bw)
+	bda := encrypt(bx, bv+bw)
 	bda = base64.StdEncoding.EncodeToString([]byte(bda))
 	form := url.Values{
 		"bda":          {bda},
