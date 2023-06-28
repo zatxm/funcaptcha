@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -25,6 +26,13 @@ var (
 	}
 	client, _ = tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
 )
+
+func init() {
+	proxy := os.Getenv("http_proxy")
+	if proxy != "" {
+		client.SetProxy(proxy)
+	}
+}
 
 func GetOpenAIToken() (string, error) {
 	// generate timestamp in 1687790752 format
