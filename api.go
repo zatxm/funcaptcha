@@ -24,14 +24,20 @@ var (
 		tls_client.WithNotFollowRedirects(),
 		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
 	}
-	client, _ = tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	client *tls_client.HttpClient
 )
 
 func init() {
+	cli, _ := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	client = &cli
 	proxy := os.Getenv("http_proxy")
 	if proxy != "" {
-		client.SetProxy(proxy)
+		(*client).SetProxy(proxy)
 	}
+}
+
+func SetTLSClient(cli *tls_client.HttpClient) {
+	client = cli
 }
 
 func GetOpenAIToken() (string, error) {
@@ -71,7 +77,7 @@ func GetOpenAIToken() (string, error) {
 	req.Header.Set("Sec-Fetch-Mode", "cors")
 	req.Header.Set("Sec-Fetch-Site", "same-origin")
 	req.Header.Set("TE", "trailers")
-	resp, err := client.Do(req)
+	resp, err := (*client).Do(req)
 	if err != nil {
 		return "", err
 	}
