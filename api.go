@@ -45,7 +45,7 @@ func GetOpenAIToken() (string, error) {
 	form, hex := GetForm()
 	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/gt2/public_key/35536E1E-65B4-4D96-9D97-6ADB7EFF8147", strings.NewReader(form))
 	req.Header.Set("Host", "tcr9i.chat.openai.com")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; rv:114.0) Gecko/20100101 Firefox/114.0")
+	req.Header.Set("User-Agent", bv)
 	req.Header.Set("Accept", "*/*")
 	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
 	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
