@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/acheong08/funcaptcha"
+	"github.com/linweiyuan/funcaptcha"
 )
 
 func main() {

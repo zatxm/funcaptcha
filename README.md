@@ -1,15 +1,18 @@
 # Arkose Fetch
 
 Usage for OpenAI
+
 ```go
 import (
-  arkose "github.com/acheong08/funcaptcha"
-}
+	"fmt"
 
-func main(){
-  token, err := arkose.GetOpenAIToken()
-  if err != nil {
-    panic(err)
-  }
-  fmt.Println(token) // Used for gpt-4 requests
+	"github.com/linweiyuan/funcaptcha"
+)
+
+func main() {
+	token, _ := funcaptcha.GetOpenAIToken()
+	fmt.Println(token)
 }
+```
+
+Forked from: [acheong08/funcaptcha](https://github.com/acheong08/funcaptcha)

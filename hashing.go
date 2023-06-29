@@ -10,6 +10,7 @@ import (
 
 //goland:noinspection SpellCheckingInspection
 func getWindowHash() string {
+	// Object.getOwnPropertyNames(window);
 	b1 := []string{
 		"ALFCCJS",
 		"AbortController",
@@ -1146,6 +1147,7 @@ func getWindowHash() string {
 }
 
 func getWindowProtoChainHash() string {
+	// Object.getPrototypeOf(window);
 	b0 := []string{
 		"TEMPORARY",
 		"PERSISTENT",
