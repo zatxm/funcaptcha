@@ -42,20 +42,8 @@ func SetTLSClient(cli *tls_client.HttpClient) {
 }
 
 func GetOpenAIToken() (string, error) {
-
-	bda := getBDA()
-	bda = base64.StdEncoding.EncodeToString([]byte(bda))
-	form := url.Values{
-		"bda":          {bda},
-		"public_key":   {"35536E1E-65B4-4D96-9D97-6ADB7EFF8147"},
-		"site":         {"https://chat.openai.com"},
-		"userbrowser":  {bv},
-		"capi_version": {"1.5.2"},
-		"capi_mode":    {"lightbox"},
-		"style_theme":  {"default"},
-		"rnd":          {strconv.FormatFloat(rand.Float64(), 'f', -1, 64)},
-	}
-	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/gt2/public_key/35536E1E-65B4-4D96-9D97-6ADB7EFF8147", strings.NewReader(form.Encode()))
+	form := GetForm()
+	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/gt2/public_key/35536E1E-65B4-4D96-9D97-6ADB7EFF8147", strings.NewReader(form))
 	req.Header.Set("Host", "tcr9i.chat.openai.com")
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; rv:114.0) Gecko/20100101 Firefox/114.0")
 	req.Header.Set("Accept", "*/*")
@@ -87,6 +75,22 @@ func GetOpenAIToken() (string, error) {
 		return "", err
 	}
 	return arkose.Token, nil
+}
+
+func GetForm() string {
+	bda := getBDA()
+	bda = base64.StdEncoding.EncodeToString([]byte(bda))
+	form := url.Values{
+		"bda":          {bda},
+		"public_key":   {"35536E1E-65B4-4D96-9D97-6ADB7EFF8147"},
+		"site":         {"https://chat.openai.com"},
+		"userbrowser":  {bv},
+		"capi_version": {"1.5.2"},
+		"capi_mode":    {"lightbox"},
+		"style_theme":  {"default"},
+		"rnd":          {strconv.FormatFloat(rand.Float64(), 'f', -1, 64)},
+	}
+	return form.Encode()
 }
 
 func getBDA() string {
