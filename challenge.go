@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"strings"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -33,6 +34,7 @@ type Session struct {
 	SessionToken    string
 	Hex             string
 	ChallengeLogger challengeLogger
+	Challenge       Challenge
 }
 
 type Challenge struct {
@@ -102,7 +104,7 @@ func StartChallenge(full_session, hex string) (*Session, error) {
 	return &session, err
 }
 
-func (c *Session) RequestChallenge() (*Challenge, error) {
+func (c *Session) RequestChallenge() error {
 	challenge_request := requestChallenge{
 		Sid:               c.Sid,
 		Token:             c.SessionToken,
@@ -118,12 +120,12 @@ func (c *Session) RequestChallenge() (*Challenge, error) {
 	req.Header = headers
 	resp, err := (*client).Do(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("status code %d", resp.StatusCode)
+		return fmt.Errorf("status code %d", resp.StatusCode)
 	}
 
 	body, _ := io.ReadAll(resp.Body)
@@ -131,10 +133,34 @@ func (c *Session) RequestChallenge() (*Challenge, error) {
 	var challenge_data Challenge
 	err = json.Unmarshal(body, &challenge_data)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	err = c.log(challenge_data.ChallengeID, challenge_data.GameData.GameType, "loaded", "game loaded")
-	return &challenge_data, err
+	c.Challenge = challenge_data
+	return err
+}
+
+func (c *Session) DownloadChallengeImages() error {
+	for _, url := range c.Challenge.GameData.CustomGUI.ChallengeIMGs {
+		req, _ := http.NewRequest(http.MethodGet, url, nil)
+		req.Header = headers
+		resp, err := (*client).Do(req)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			return fmt.Errorf("status code %d", resp.StatusCode)
+		}
+
+		body, _ := io.ReadAll(resp.Body)
+		err = os.WriteFile(fmt.Sprintf("challenge_%s.png", c.Challenge.ChallengeID), body, 0644)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *Session) log(game_token string, game_type int, category, action string) error {
