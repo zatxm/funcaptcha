@@ -3,7 +3,12 @@ package funcaptcha
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
+	"os"
+	"strings"
+
+	http "github.com/bogdanfinn/fhttp"
 )
 
 func toJSON(data interface{}) string {
@@ -21,4 +26,30 @@ func jsonToForm(data string) string {
 		form.Add(k, fmt.Sprintf("%v", v))
 	}
 	return form.Encode()
+}
+
+func DownloadChallenge(urls []string) error {
+	for _, url := range urls {
+		req, _ := http.NewRequest(http.MethodGet, url, nil)
+		req.Header = headers
+		resp, err := (*client).Do(req)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			return fmt.Errorf("status code %d", resp.StatusCode)
+		}
+
+		body, _ := io.ReadAll(resp.Body)
+		// Figure out filename from URL
+		url_paths := strings.Split(url, "/")
+		filename := strings.Split(url_paths[len(url_paths)-1], "?")[0]
+		err = os.WriteFile(filename, body, 0644)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

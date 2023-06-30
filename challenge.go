@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -29,11 +28,18 @@ var headers = http.Header{
 }
 
 type Session struct {
-	Sid             string
-	SessionToken    string
-	Hex             string
-	ChallengeLogger challengeLogger
-	Challenge       Challenge
+	Sid              string
+	SessionToken     string
+	Hex              string
+	ChallengeLogger  challengeLogger
+	Challenge        Challenge
+	ConciseChallenge ConciseChallenge
+}
+
+type ConciseChallenge struct {
+	GameType     string
+	URLs         []string
+	Instructions string
 }
 
 type Challenge struct {
@@ -45,8 +51,10 @@ type Challenge struct {
 	Sec                  int         `json:"sec"`
 	EndURL               interface{} `json:"end_url"`
 	GameData             struct {
-		GameType  int `json:"gameType"`
-		CustomGUI struct {
+		GameType          int    `json:"gameType"`
+		GameVariant       string `json:"game_variant"`
+		InstructionString string `json:"instruction_string"`
+		CustomGUI         struct {
 			ChallengeIMGs []string `json:"_challenge_imgs"`
 		} `json:"customGUI"`
 	} `json:"game_data"`
@@ -103,14 +111,14 @@ func StartChallenge(full_session, hex string) (*Session, error) {
 	return &session, err
 }
 
-func (c *Session) RequestChallenge() error {
+func (c *Session) RequestChallenge(isAudioGame bool) error {
 	challenge_request := requestChallenge{
 		Sid:               c.Sid,
 		Token:             c.SessionToken,
 		AnalyticsTier:     40,
 		RenderType:        "canvas",
 		Lang:              "",
-		IsAudioGame:       false,
+		IsAudioGame:       isAudioGame,
 		APIBreakerVersion: "green",
 	}
 	payload := jsonToForm(toJSON(challenge_request))
@@ -135,30 +143,33 @@ func (c *Session) RequestChallenge() error {
 	}
 	err = c.log(challenge_data.ChallengeID, challenge_data.GameData.GameType, "loaded", "game loaded")
 	c.Challenge = challenge_data
-	return err
-}
+	// Build concise challenge
+	var challenge_type string
+	var challenge_urls []string
+	var key string
+	switch challenge_data.GameData.GameType {
+	case 4:
+		challenge_type = "image"
+		challenge_urls = challenge_data.GameData.CustomGUI.ChallengeIMGs
+		instruction_string := challenge_data.GameData.InstructionString
+		key = fmt.Sprintf("4.instructions-%s", instruction_string)
+	case 101:
+		challenge_type = "audio"
+		challenge_urls = challenge_data.AudioChallengeURLs
+		instruction_string := challenge_data.GameData.GameVariant
+		key = fmt.Sprintf("audio_game.instructions-%s", instruction_string)
 
-func (c *Session) DownloadChallengeImages() error {
-	for _, url := range c.Challenge.GameData.CustomGUI.ChallengeIMGs {
-		req, _ := http.NewRequest(http.MethodGet, url, nil)
-		req.Header = headers
-		resp, err := (*client).Do(req)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != 200 {
-			return fmt.Errorf("status code %d", resp.StatusCode)
-		}
-
-		body, _ := io.ReadAll(resp.Body)
-		err = os.WriteFile(fmt.Sprintf("challenge_%s.png", c.Challenge.ChallengeID), body, 0644)
-		if err != nil {
-			return err
-		}
+	default:
+		challenge_type = "unknown"
+		challenge_urls = []string{}
 	}
-	return nil
+
+	c.ConciseChallenge = ConciseChallenge{
+		GameType:     challenge_type,
+		URLs:         challenge_urls,
+		Instructions: challenge_data.StringTable[key],
+	}
+	return err
 }
 
 func (c *Session) log(game_token string, game_type int, category, action string) error {

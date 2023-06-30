@@ -21,12 +21,13 @@ func main() {
 	}
 	log.Println("Challenge started!")
 
-	err = session.RequestChallenge()
+	err = session.RequestChallenge(true)
 	if err != nil {
 		log.Fatalf("error requesting challenge: %v\n", err)
 	}
-	log.Println("Downloading challenge...")
-	err = session.DownloadChallengeImages()
+	log.Println(session.ConciseChallenge)
+	log.Println("Downloading challenge")
+	err = funcaptcha.DownloadChallenge(session.ConciseChallenge.URLs)
 	if err != nil {
 		log.Fatalf("error downloading challenge: %v\n", err)
 	}
