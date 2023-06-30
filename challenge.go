@@ -38,9 +38,9 @@ type Session struct {
 }
 
 type ConciseChallenge struct {
-	GameType     string
-	URLs         []string
-	Instructions string
+	GameType     string   `json:"game_type"`
+	URLs         []string `json:"urls"`
+	Instructions string   `json:"instructions"`
 }
 
 type Challenge struct {
