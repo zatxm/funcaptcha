@@ -3,6 +3,7 @@ module github.com/linweiyuan/funcaptcha
 go 1.20
 
 require (
+	github.com/acheong08/funcaptcha v0.2.1-0.20230629155839-8827dd09430f
 	github.com/bogdanfinn/fhttp v0.5.23
 	github.com/bogdanfinn/tls-client v1.4.0
 )

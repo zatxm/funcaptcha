@@ -6,7 +6,7 @@ Usage for OpenAI
 import (
 	"fmt"
 
-	"github.com/linweiyuan/funcaptcha"
+	"github.com/acheong08/funcaptcha"
 )
 
 func main() {
@@ -14,5 +14,3 @@ func main() {
 	fmt.Println(token)
 }
 ```
-
-Forked from: [acheong08/funcaptcha](https://github.com/acheong08/funcaptcha)
