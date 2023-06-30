@@ -29,12 +29,12 @@ var headers = http.Header{
 }
 
 type Session struct {
-	Sid              string
-	SessionToken     string
-	Hex              string
-	ChallengeLogger  challengeLogger
-	Challenge        Challenge
-	ConciseChallenge ConciseChallenge
+	Sid              string           `json:"sid"`
+	SessionToken     string           `json:"session_token"`
+	Hex              string           `json:"hex"`
+	ChallengeLogger  challengeLogger  `json:"challenge_logger"`
+	Challenge        Challenge        `json:"challenge"`
+	ConciseChallenge ConciseChallenge `json:"concise_challenge"`
 }
 
 type ConciseChallenge struct {
