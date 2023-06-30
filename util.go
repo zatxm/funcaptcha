@@ -1,6 +1,7 @@
 package funcaptcha
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -29,33 +30,39 @@ func jsonToForm(data string) string {
 	return form.Encode()
 }
 
-func DownloadChallenge(urls []string) error {
-	for _, url := range urls {
+func DownloadChallenge(urls []string, b64 bool) ([]string, error) {
+	var b64_imgs []string = make([]string, len(urls))
+	for i, url := range urls {
 		req, _ := http.NewRequest(http.MethodGet, url, nil)
 		req.Header = headers
 		resp, err := (*client).Do(req)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			return fmt.Errorf("status code %d", resp.StatusCode)
+			return nil, fmt.Errorf("status code %d", resp.StatusCode)
 		}
 
 		body, _ := io.ReadAll(resp.Body)
 		// Figure out filename from URL
 		url_paths := strings.Split(url, "/")
-		filename := strings.Split(url_paths[len(url_paths)-1], "?")[0]
-		if filename == "image" {
-			filename = fmt.Sprintf("image_%s.png", getTimeStamp())
-		}
-		err = os.WriteFile(filename, body, 0644)
-		if err != nil {
-			return err
+		if !b64 {
+			filename := strings.Split(url_paths[len(url_paths)-1], "?")[0]
+			if filename == "image" {
+				filename = fmt.Sprintf("image_%s.png", getTimeStamp())
+			}
+			err = os.WriteFile(filename, body, 0644)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			// base64 encode body
+			b64_imgs[i] = base64.StdEncoding.EncodeToString(body)
 		}
 	}
-	return nil
+	return b64_imgs, nil
 }
 
 func getTimeStamp() string {

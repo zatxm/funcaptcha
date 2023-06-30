@@ -28,7 +28,7 @@ func main() {
 	}
 	log.Println(session.ConciseChallenge)
 	log.Println("Downloading challenge")
-	err = funcaptcha.DownloadChallenge(session.ConciseChallenge.URLs)
+	_, err = funcaptcha.DownloadChallenge(session.ConciseChallenge.URLs, false)
 	if err != nil {
 		log.Fatalf("error downloading challenge: %v\n", err)
 	}
