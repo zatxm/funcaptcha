@@ -41,12 +41,12 @@ func SetTLSClient(cli *tls_client.HttpClient) {
 	client = cli
 }
 
-func GetOpenAIToken() (string, error) {
+func GetOpenAIToken() (string, string, error) { // token, hex, error
 	form, hex := GetForm()
 	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/gt2/public_key/35536E1E-65B4-4D96-9D97-6ADB7EFF8147", strings.NewReader(form))
 	req.Header.Set("Host", "tcr9i.chat.openai.com")
 	req.Header.Set("User-Agent", bv)
-	req.Header.Set("Accept", "*/*")
+	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
 	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
@@ -60,11 +60,11 @@ func GetOpenAIToken() (string, error) {
 	req.Header.Set("TE", "trailers")
 	resp, err := (*client).Do(req)
 	if err != nil {
-		return "", err
+		return "", hex, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return "", errors.New("status code " + resp.Status)
+		return "", hex, errors.New("status code " + resp.Status)
 	}
 	type arkose_response struct {
 		Token string `json:"token"`
@@ -72,12 +72,12 @@ func GetOpenAIToken() (string, error) {
 	var arkose arkose_response
 	err = json.NewDecoder(resp.Body).Decode(&arkose)
 	if err != nil {
-		return "", err
+		return "", hex, err
 	}
 	if !strings.Contains(arkose.Token, "|rid=") || !strings.Contains(arkose.Token, "|sup=") {
-		return "", errors.New("captcha required")
+		return arkose.Token, hex, errors.New("captcha required")
 	}
-	return arkose.Token, nil
+	return arkose.Token, hex, nil
 }
 
 func GetForm() (string, string) {
