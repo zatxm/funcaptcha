@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 
@@ -115,7 +114,7 @@ func (c *Session) RequestChallenge() error {
 		APIBreakerVersion: "green",
 	}
 	payload := jsonToForm(toJSON(challenge_request))
-	log.Println(payload)
+
 	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/gfct/", strings.NewReader(payload))
 	req.Header = headers
 	resp, err := (*client).Do(req)
@@ -129,7 +128,6 @@ func (c *Session) RequestChallenge() error {
 	}
 
 	body, _ := io.ReadAll(resp.Body)
-	log.Println(string(body))
 	var challenge_data Challenge
 	err = json.Unmarshal(body, &challenge_data)
 	if err != nil {
