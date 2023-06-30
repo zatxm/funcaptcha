@@ -107,13 +107,29 @@ func randomHex(length int) string {
 
 func getBDA() (string, string) {
 	fe := `{"key":"fe","value":["DNT:1","L:en-US","D:24","PR:1","S:0,0","AS:false","TO:0","SS:true","LS:true","IDB:true","B:false","ODB:false","CPUC:unknown","PK:Linux x86_64","CFP:1583107531","FR:false","FOS:false","FB:false","JSF:Arial,Arial Narrow,Bitstream Vera Sans Mono,Bookman Old Style,Century Schoolbook,Courier,Courier New,Helvetica,MS Gothic,MS PGothic,Palatino,Palatino Linotype,Times,Times New Roman","P:Chrome PDF Viewer,Chromium PDF Viewer,Microsoft Edge PDF Viewer,PDF Viewer,WebKit built-in PDF","T:0,false,false","H:2","SWF:false"]}`
-	// Add F to fingerprint
-	var fe_json []map[string]interface{}
+	var fe_json struct {
+		Key   string   `json:"key"`
+		Value []string `json:"value"`
+	}
 	err := json.Unmarshal([]byte(fe), &fe_json)
 	if err != nil {
 		panic(err)
 	}
-	f_val := getF(fe_json)
+	var fe_val string = "{"
+	for _, val := range fe_json.Value {
+		val = fmt.Sprintf(`"%s"`, val)
+		val = strings.Replace(val, ":", `":"`, 1)
+		fe_val += val + ","
+	}
+	fe_val = fe_val[:len(fe_val)-1] + "}"
+
+	var fe_value_json map[string]string
+	err = json.Unmarshal([]byte(fe_val), &fe_value_json)
+	if err != nil {
+		panic(err)
+	}
+
+	f_val := getF(fe_value_json)
 	hex := randomHex(32)
 	// Generate initial fingerprint
 	timestamp := fmt.Sprintf("%d", time.Now().UnixNano()/1000000000)
