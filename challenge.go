@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 
 	http "github.com/bogdanfinn/fhttp"
@@ -178,7 +179,7 @@ func (c *Session) RequestChallenge(isAudioGame bool) error {
 	c.ConciseChallenge = ConciseChallenge{
 		GameType:     challenge_type,
 		URLs:         challenge_urls,
-		Instructions: challenge_data.StringTable[key],
+		Instructions: strings.ReplaceAll(strings.ReplaceAll(challenge_data.StringTable[key], "<strong>", ""), "</strong>", ""),
 	}
 	return err
 }
@@ -204,13 +205,15 @@ func (c *Session) SubmitAnswer(index int) error {
 		return err
 	}
 	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
 	var response struct {
 		Response       string `json:"response"`
 		Solved         bool   `json:"solved"`
 		IncorrectGuess string `json:"incorrect_guess"`
 		Score          int    `json:"score"`
 	}
-	err = json.NewDecoder(resp.Body).Decode(&response)
+	log.Println(string(body))
+	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return err
 	}

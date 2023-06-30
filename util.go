@@ -47,6 +47,9 @@ func DownloadChallenge(urls []string) error {
 		// Figure out filename from URL
 		url_paths := strings.Split(url, "/")
 		filename := strings.Split(url_paths[len(url_paths)-1], "?")[0]
+		if filename == "image" {
+			filename = fmt.Sprintf("image_%s.png", getTimeStamp())
+		}
 		err = os.WriteFile(filename, body, 0644)
 		if err != nil {
 			return err
