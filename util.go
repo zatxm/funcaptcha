@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	http "github.com/bogdanfinn/fhttp"
 )
@@ -52,4 +53,13 @@ func DownloadChallenge(urls []string) error {
 		}
 	}
 	return nil
+}
+
+func getTimeStamp() string {
+	return fmt.Sprintf("%d", time.Now().UnixNano()/int64(time.Millisecond))
+}
+
+func getRequestId(sessionId string) string {
+	pwd := fmt.Sprintf("REQUESTED%sID", sessionId)
+	return encrypt(`{"sc":[147,307]}`, pwd)
 }

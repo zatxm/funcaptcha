@@ -90,6 +90,16 @@ type requestChallenge struct {
 	APIBreakerVersion string `json:"apiBreakerVersion"`
 }
 
+type submitChallenge struct {
+	SessionToken  string `json:"session_token"`
+	Sid           string `json:"sid"`
+	GameToken     string `json:"game_token"`
+	Guess         string `json:"guess"`
+	RenderType    string `json:"render_type"`
+	AnalyticsTier int    `json:"analytics_tier"`
+	Bio           string `json:"bio"`
+}
+
 func StartChallenge(full_session, hex string) (*Session, error) {
 	headers.Set("Referer", fmt.Sprintf("https://tcr9i.chat.openai.com/fc/assets/ec-game-core/game-core/1.13.0/standard/index.html?session=%s", strings.Replace(full_session, "|", "&", -1)))
 	fields := strings.Split(full_session, "|")
@@ -125,6 +135,7 @@ func (c *Session) RequestChallenge(isAudioGame bool) error {
 
 	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/gfct/", strings.NewReader(payload))
 	req.Header = headers
+	req.Header.Set("X-NewRelic-Timestamp", getTimeStamp())
 	resp, err := (*client).Do(req)
 	if err != nil {
 		return err
@@ -170,6 +181,43 @@ func (c *Session) RequestChallenge(isAudioGame bool) error {
 		Instructions: challenge_data.StringTable[key],
 	}
 	return err
+}
+
+func (c *Session) SubmitAnswer(index int) error {
+	submission := submitChallenge{
+		SessionToken:  c.SessionToken,
+		Sid:           c.Sid,
+		GameToken:     c.Challenge.ChallengeID,
+		RenderType:    "canvas",
+		AnalyticsTier: 40,
+		Bio:           "eyJtYmlvIjoiMTUwLDAsMTE3LDIzOTszMDAsMCwxMjEsMjIxOzMxNywwLDEyNCwyMTY7NTUwLDAsMTI5LDIxMDs1NjcsMCwxMzQsMjA3OzYxNywwLDE0NCwyMDU7NjUwLDAsMTU1LDIwNTs2NjcsMCwxNjUsMjA1OzY4NCwwLDE3MywyMDc7NzAwLDAsMTc4LDIxMjs4MzQsMCwyMjEsMjI4OzI2MDY3LDAsMTkzLDM1MTsyNjEwMSwwLDE4NSwzNTM7MjYxMDEsMCwxODAsMzU3OzI2MTM0LDAsMTcyLDM2MTsyNjE4NCwwLDE2NywzNjM7MjYyMTcsMCwxNjEsMzY1OzI2MzM0LDAsMTU2LDM2NDsyNjM1MSwwLDE1MiwzNTQ7MjYzNjcsMCwxNTIsMzQzOzI2Mzg0LDAsMTUyLDMzMTsyNjQ2NywwLDE1MSwzMjU7MjY0NjcsMCwxNTEsMzE3OzI2NTAxLDAsMTQ5LDMxMTsyNjY4NCwxLDE0NywzMDc7MjY3NTEsMiwxNDcsMzA3OzMwNDUxLDAsMzcsNDM3OzMwNDY4LDAsNTcsNDI0OzMwNDg0LDAsNjYsNDE0OzMwNTAxLDAsODgsMzkwOzMwNTAxLDAsMTA0LDM2OTszMDUxOCwwLDEyMSwzNDk7MzA1MzQsMCwxNDEsMzI0OzMwNTUxLDAsMTQ5LDMxNDszMDU4NCwwLDE1MywzMDQ7MzA2MTgsMCwxNTUsMjk2OzMwNzUxLDAsMTU5LDI4OTszMDc2OCwwLDE2NywyODA7MzA3ODQsMCwxNzcsMjc0OzMwODE4LDAsMTgzLDI3MDszMDg1MSwwLDE5MSwyNzA7MzA4ODQsMCwyMDEsMjY4OzMwOTE4LDAsMjA4LDI2ODszMTIzNCwwLDIwNCwyNjM7MzEyNTEsMCwyMDAsMjU3OzMxMzg0LDAsMTk1LDI1MTszMTQxOCwwLDE4OSwyNDk7MzE1NTEsMSwxODksMjQ5OzMxNjM0LDIsMTg5LDI0OTszMTcxOCwxLDE4OSwyNDk7MzE3ODQsMiwxODksMjQ5OzMxODg0LDEsMTg5LDI0OTszMTk2OCwyLDE4OSwyNDk7MzIyODQsMCwyMDIsMjQ5OzMyMzE4LDAsMjE2LDI0NzszMjMxOCwwLDIzNCwyNDU7MzIzMzQsMCwyNjksMjQ1OzMyMzUxLDAsMzAwLDI0NTszMjM2OCwwLDMzOSwyNDE7MzIzODQsMCwzODgsMjM5OzMyNjE4LDAsMzkwLDI0NzszMjYzNCwwLDM3NCwyNTM7MzI2NTEsMCwzNjUsMjU1OzMyNjY4LDAsMzUzLDI1NzszMjk1MSwxLDM0OCwyNTc7MzMwMDEsMiwzNDgsMjU3OzMzNTY4LDAsMzI4LDI3MjszMzU4NCwwLDMxOSwyNzg7MzM2MDEsMCwzMDcsMjg2OzMzNjUxLDAsMjk1LDI5NjszMzY1MSwwLDI5MSwzMDA7MzM2ODQsMCwyODEsMzA5OzMzNjg0LDAsMjcyLDMxNTszMzcxOCwwLDI2NiwzMTc7MzM3MzQsMCwyNTgsMzIzOzMzNzUxLDAsMjUyLDMyNzszMzc1MSwwLDI0NiwzMzM7MzM3NjgsMCwyNDAsMzM3OzMzNzg0LDAsMjM2LDM0MTszMzgxOCwwLDIyNywzNDc7MzM4MzQsMCwyMjEsMzUzOzM0MDUxLDAsMjE2LDM1NDszNDA2OCwwLDIxMCwzNDg7MzQwODQsMCwyMDQsMzQ0OzM0MTAxLDAsMTk4LDM0MDszNDEzNCwwLDE5NCwzMzY7MzQ1ODQsMSwxOTIsMzM0OzM0NjUxLDIsMTkyLDMzNDsiLCJ0YmlvIjoiIiwia2JpbyI6IiJ9",
+	}
+	submission.Guess = encrypt(fmt.Sprintf(`[{"index":%d}]`, index), c.SessionToken)
+	payload := jsonToForm(toJSON(submission))
+	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/ca/", strings.NewReader(payload))
+	req.Header = headers
+	req.Header.Set("X-Requested-ID", getRequestId(c.SessionToken))
+	req.Header.Set("X-NewRelic-Timestamp", getTimeStamp())
+
+	resp, err := (*client).Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	var response struct {
+		Response       string `json:"response"`
+		Solved         bool   `json:"solved"`
+		IncorrectGuess string `json:"incorrect_guess"`
+		Score          int    `json:"score"`
+	}
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		return err
+	}
+	if !response.Solved {
+		return fmt.Errorf("incorrect guess: %s", response.IncorrectGuess)
+	}
+	return nil
 }
 
 func (c *Session) log(game_token string, game_type int, category, action string) error {
