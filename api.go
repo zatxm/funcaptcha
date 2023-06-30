@@ -74,6 +74,9 @@ func GetOpenAIToken() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if !strings.Contains(arkose.Token, "|rid=") || !strings.Contains(arkose.Token, "|sup=") {
+		return "", errors.New("captcha required")
+	}
 	return arkose.Token, nil
 }
 
