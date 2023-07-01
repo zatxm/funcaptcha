@@ -5,15 +5,12 @@ import (
 	"strings"
 )
 
-func prepareF(f map[string]string) string {
+func prepareF(f []map[string]interface{}) string {
 	var res []string
 	for _, val := range f {
-		res = append(res, fmt.Sprintf("%v", val))
-
+		for _, v := range val {
+			res = append(res, fmt.Sprintf("%v", v))
+		}
 	}
 	return strings.Join(res, "~~~")
-}
-
-func getF(f map[string]string) string {
-	return getMurmur128String(prepareF(f), 31)
 }
