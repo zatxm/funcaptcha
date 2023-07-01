@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 
+	"github.com/acheong08/endless"
 	"github.com/acheong08/funcaptcha"
 	gin "github.com/gin-gonic/gin"
 )
@@ -12,7 +14,11 @@ func main() {
 	r := gin.Default()
 	r.GET("/captcha/start", captchaStart)
 	r.POST("/captcha/verify", captchaVerify)
-	r.Run()
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	endless.ListenAndServe(":"+port, r)
 }
 
 func captchaStart(c *gin.Context) {
