@@ -137,7 +137,7 @@ func (c *Session) RequestChallenge(isAudioGame bool) error {
 	payload := jsonToForm(toJSON(challenge_request))
 
 	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/gfct/", strings.NewReader(payload))
-	req.Header = headers
+	req.Header = c.Headers
 	req.Header.Set("X-NewRelic-Timestamp", getTimeStamp())
 	resp, err := (*client).Do(req)
 	if err != nil {
@@ -198,7 +198,7 @@ func (c *Session) SubmitAnswer(index int) error {
 	submission.Guess = encrypt(fmt.Sprintf(`[{"index":%d}]`, index), c.SessionToken)
 	payload := jsonToForm(toJSON(submission))
 	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/ca/", strings.NewReader(payload))
-	req.Header = headers
+	req.Header = c.Headers
 	req.Header.Set("X-Requested-ID", getRequestId(c.SessionToken))
 	req.Header.Set("X-NewRelic-Timestamp", getTimeStamp())
 
