@@ -1,5 +1,27 @@
 package funcaptcha
 
+import http "github.com/bogdanfinn/fhttp"
+
+const bv string = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.46"
+
+var headers = http.Header{
+	"Accept":           []string{"*/*"},
+	"Accept-Encoding":  []string{"gzip, deflate, br"},
+	"Accept-Language":  []string{"en-US,en;q=0.5"},
+	"Cache-Control":    []string{"no-cache"},
+	"Connection":       []string{"keep-alive"},
+	"Content-Type":     []string{"application/x-www-form-urlencoded; charset=UTF-8"},
+	"DNT":              []string{"1"},
+	"Host":             []string{"tcr9i.chat.openai.com"},
+	"Origin":           []string{"https://tcr9i.chat.openai.com"},
+	"Sec-Fetch-Dest":   []string{"empty"},
+	"Sec-Fetch-Mode":   []string{"cors"},
+	"Sec-Fetch-Site":   []string{"same-origin"},
+	"TE":               []string{"trailers"},
+	"User-Agent":       []string{bv},
+	"X-Requested-With": []string{"XMLHttpRequest"},
+}
+
 const bx_template string = `
 [{
 	"key": "api_type",
