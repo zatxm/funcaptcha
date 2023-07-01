@@ -25,21 +25,22 @@ var (
 		tls_client.WithNotFollowRedirects(),
 		tls_client.WithCookieJar(jar),
 	}
-	client tls_client.HttpClient
+	client *tls_client.HttpClient
 	proxy  = os.Getenv("http_proxy")
 )
 
 //goland:noinspection GoUnhandledErrorResult
 func init() {
-	client, _ = tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	cli, _ := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	client = &cli
 
 	if proxy != "" {
-		client.SetProxy(proxy)
+		(*client).SetProxy(proxy)
 	}
 }
 
 func SetTLSClient(cli *tls_client.HttpClient) {
-	client = *cli
+	client = cli
 }
 func GetOpenAIToken() (string, string, error) {
 	hex := randomHex(32)
@@ -64,7 +65,7 @@ func GetOpenAIToken() (string, string, error) {
 	req.Header.Set("Origin", "https://tcr9i.chat.openai.com")
 	req.Header.Set("Referer", fmt.Sprintf("https://tcr9i.chat.openai.com/v2/1.5.2/enforcement.%s.html", hex))
 	req.Header.Set("User-Agent", bv)
-	resp, err := client.Do(req)
+	resp, err := (*client).Do(req)
 	if err != nil {
 		return "", "", err
 	}

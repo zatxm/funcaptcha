@@ -122,7 +122,7 @@ func (c *Session) RequestChallenge(isAudioGame bool) error {
 	req, _ := http.NewRequest(http.MethodPost, "https://client-api.arkoselabs.com/fc/gfct/", strings.NewReader(payload))
 	req.Header = c.Headers
 	req.Header.Set("X-NewRelic-Timestamp", getTimeStamp())
-	resp, err := client.Do(req)
+	resp, err := (*client).Do(req)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func (c *Session) SubmitAnswer(index int) error {
 	req.Header.Set("X-Requested-ID", getRequestId(c.SessionToken))
 	req.Header.Set("X-NewRelic-Timestamp", getTimeStamp())
 
-	resp, err := client.Do(req)
+	resp, err := (*client).Do(req)
 	if err != nil {
 		return err
 	}
@@ -206,9 +206,10 @@ func (c *Session) SubmitAnswer(index int) error {
 		return fmt.Errorf("incorrect guess: %s", response.IncorrectGuess)
 	}
 	// Set new client
-	client, _ = tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	cli, _ := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	client = &cli
 	if proxy != "" {
-		client.SetProxy(proxy)
+		(*client).SetProxy(proxy)
 	}
 	return nil
 }
@@ -224,7 +225,7 @@ func (c *Session) log(game_token string, game_type int, category, action string)
 
 	request, _ := http.NewRequest(http.MethodPost, "https://client-api.arkoselabs.com/fc/a/", strings.NewReader(jsonToForm(toJSON(v))))
 	request.Header = headers
-	resp, err := client.Do(request)
+	resp, err := (*client).Do(request)
 	if err != nil {
 		return err
 	}
