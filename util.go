@@ -35,7 +35,7 @@ func DownloadChallenge(urls []string, b64 bool) ([]string, error) {
 	for i, url := range urls {
 		req, _ := http.NewRequest(http.MethodGet, url, nil)
 		req.Header = headers
-		resp, err := (*client).Do(req)
+		resp, err := client.Do(req)
 		if err != nil {
 			return nil, err
 		}

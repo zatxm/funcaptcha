@@ -121,7 +121,7 @@ func (c *Session) RequestChallenge(isAudioGame bool) error {
 	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/gfct/", strings.NewReader(payload))
 	req.Header = c.Headers
 	req.Header.Set("X-NewRelic-Timestamp", getTimeStamp())
-	resp, err := (*client).Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -184,7 +184,7 @@ func (c *Session) SubmitAnswer(index int) error {
 	req.Header.Set("X-Requested-ID", getRequestId(c.SessionToken))
 	req.Header.Set("X-NewRelic-Timestamp", getTimeStamp())
 
-	resp, err := (*client).Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func (c *Session) log(game_token string, game_type int, category, action string)
 
 	request, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/a/", strings.NewReader(jsonToForm(toJSON(v))))
 	request.Header = headers
-	resp, err := (*client).Do(request)
+	resp, err := client.Do(request)
 	if err != nil {
 		return err
 	}

@@ -24,20 +24,20 @@ var (
 		tls_client.WithNotFollowRedirects(),
 		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
 	}
-	client *tls_client.HttpClient
+	client tls_client.HttpClient
 )
 
 func init() {
 	cli, _ := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
-	client = &cli
+	client = cli
 	proxy := os.Getenv("http_proxy")
 	if proxy != "" {
-		(*client).SetProxy(proxy)
+		client.SetProxy(proxy)
 	}
 }
 
 func SetTLSClient(cli *tls_client.HttpClient) {
-	client = cli
+	client = *cli
 }
 
 func GetOpenAIToken() (string, string, error) { // token, hex, error
@@ -45,7 +45,7 @@ func GetOpenAIToken() (string, string, error) { // token, hex, error
 	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/gt2/public_key/35536E1E-65B4-4D96-9D97-6ADB7EFF8147", strings.NewReader(form))
 	req.Header = headers
 	req.Header.Set("Referer", fmt.Sprintf("https://tcr9i.chat.openai.com/v2/1.5.2/enforcement.%s.html", hex))
-	resp, err := (*client).Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", hex, err
 	}
