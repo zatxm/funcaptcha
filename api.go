@@ -44,20 +44,8 @@ func SetTLSClient(cli *tls_client.HttpClient) {
 func GetOpenAIToken() (string, string, error) { // token, hex, error
 	form, hex := GetForm()
 	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/gt2/public_key/35536E1E-65B4-4D96-9D97-6ADB7EFF8147", strings.NewReader(form))
-	req.Header.Set("Host", "tcr9i.chat.openai.com")
-	req.Header.Set("User-Agent", bv)
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
-	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-	req.Header.Set("Origin", "https://tcr9i.chat.openai.com")
-	req.Header.Set("DNT", "1")
-	req.Header.Set("Connection", "keep-alive")
+	req.Header = headers
 	req.Header.Set("Referer", fmt.Sprintf("https://tcr9i.chat.openai.com/v2/1.5.2/enforcement.%s.html", hex))
-	req.Header.Set("Sec-Fetch-Dest", "empty")
-	req.Header.Set("Sec-Fetch-Mode", "cors")
-	req.Header.Set("Sec-Fetch-Site", "same-origin")
-	req.Header.Set("TE", "trailers")
 	resp, err := (*client).Do(req)
 	if err != nil {
 		return "", hex, err

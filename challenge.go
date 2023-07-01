@@ -24,7 +24,7 @@ var headers = http.Header{
 	"Sec-Fetch-Mode":   []string{"cors"},
 	"Sec-Fetch-Site":   []string{"same-origin"},
 	"TE":               []string{"trailers"},
-	"User-Agent":       []string{"Mozilla/5.0 (Windows NT 10.0; rv:114.0) Gecko/20100101 Firefox/114.0"},
+	"User-Agent":       []string{bv},
 	"X-Requested-With": []string{"XMLHttpRequest"},
 }
 
@@ -35,6 +35,7 @@ type Session struct {
 	ChallengeLogger  challengeLogger  `json:"challenge_logger"`
 	Challenge        Challenge        `json:"challenge"`
 	ConciseChallenge ConciseChallenge `json:"concise_challenge"`
+	Headers          http.Header      `json:"headers"`
 }
 
 type ConciseChallenge struct {
@@ -102,7 +103,6 @@ type submitChallenge struct {
 }
 
 func StartChallenge(full_session, hex string) (*Session, error) {
-	headers.Set("Referer", fmt.Sprintf("https://tcr9i.chat.openai.com/fc/assets/ec-game-core/game-core/1.13.0/standard/index.html?session=%s", strings.Replace(full_session, "|", "&", -1)))
 	fields := strings.Split(full_session, "|")
 	session_token := fields[0]
 	sid := strings.Split(fields[1], "=")[1]
@@ -112,6 +112,8 @@ func StartChallenge(full_session, hex string) (*Session, error) {
 		SessionToken: session_token,
 		Hex:          hex,
 	}
+	session.Headers = headers
+	session.Headers.Set("Referer", fmt.Sprintf("https://tcr9i.chat.openai.com/fc/assets/ec-game-core/game-core/1.13.0/standard/index.html?session=%s", strings.Replace(full_session, "|", "&", -1)))
 	session.ChallengeLogger = challengeLogger{
 		Sid:           sid,
 		SessionToken:  session_token,
