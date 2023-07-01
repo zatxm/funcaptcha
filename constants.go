@@ -11,13 +11,8 @@ var headers = http.Header{
 	"Cache-Control":    []string{"no-cache"},
 	"Connection":       []string{"keep-alive"},
 	"Content-Type":     []string{"application/x-www-form-urlencoded; charset=UTF-8"},
-	"DNT":              []string{"1"},
 	"Host":             []string{"client-api.arkoselabs.com"},
 	"Origin":           []string{"https://client-api.arkoselabs.com"},
-	"Sec-Fetch-Dest":   []string{"empty"},
-	"Sec-Fetch-Mode":   []string{"cors"},
-	"Sec-Fetch-Site":   []string{"same-origin"},
-	"TE":               []string{"trailers"},
 	"User-Agent":       []string{bv},
 	"X-Requested-With": []string{"XMLHttpRequest"},
 }
