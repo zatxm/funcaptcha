@@ -12,8 +12,8 @@ var headers = http.Header{
 	"Connection":       []string{"keep-alive"},
 	"Content-Type":     []string{"application/x-www-form-urlencoded; charset=UTF-8"},
 	"DNT":              []string{"1"},
-	"Host":             []string{"tcr9i.chat.openai.com"},
-	"Origin":           []string{"https://tcr9i.chat.openai.com"},
+	"Host":             []string{"client-api.arkoselabs.com"},
+	"Origin":           []string{"https://client-api.arkoselabs.com"},
 	"Sec-Fetch-Dest":   []string{"empty"},
 	"Sec-Fetch-Mode":   []string{"cors"},
 	"Sec-Fetch-Site":   []string{"same-origin"},
@@ -177,13 +177,13 @@ const bx_template string = `
 		"value": "[[],[]]"
 	}, {
 		"key": "window__location_href",
-		"value": "https://tcr9i.chat.openai.com/v2/1.5.2/enforcement.%s.html#35536E1E-65B4-4D96-9D97-6ADB7EFF8147"
+		"value": "https://client-api.arkoselabs.com/v2/1.5.2/enforcement.%s.html#35536E1E-65B4-4D96-9D97-6ADB7EFF8147"
 	}, {
 		"key": "client_config__sitedata_location_href",
 		"value": "https://chat.openai.com/"
 	}, {
 		"key": "client_config__surl",
-		"value": "https://tcr9i.chat.openai.com"
+		"value": "https://client-api.arkoselabs.com"
 	}, {
 		"key": "mobile_sdk__is_sdk"
 	}, {

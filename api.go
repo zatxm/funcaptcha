@@ -27,12 +27,12 @@ var (
 		tls_client.WithCookieJar(jar), // create cookieJar instance and pass it as argument
 	}
 	client tls_client.HttpClient
+	proxy  = os.Getenv("http_proxy")
 )
 
 func init() {
 	cli, _ := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
 	client = cli
-	proxy := os.Getenv("http_proxy")
 	if proxy != "" {
 		client.SetProxy(proxy)
 	}
@@ -43,10 +43,14 @@ func SetTLSClient(cli *tls_client.HttpClient) {
 }
 
 func GetOpenAIToken() (string, string, error) { // token, hex, error
+	client, _ := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if proxy != "" {
+		client.SetProxy(proxy)
+	}
 	form, hex := GetForm()
-	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/gt2/public_key/35536E1E-65B4-4D96-9D97-6ADB7EFF8147", strings.NewReader(form))
+	req, _ := http.NewRequest(http.MethodPost, "https://client-api.arkoselabs.com/fc/gt2/public_key/35536E1E-65B4-4D96-9D97-6ADB7EFF8147", strings.NewReader(form))
 	req.Header = headers
-	req.Header.Set("Referer", fmt.Sprintf("https://tcr9i.chat.openai.com/v2/1.5.2/enforcement.%s.html", hex))
+	req.Header.Set("Referer", fmt.Sprintf("https://client-api.arkoselabs.com/v2/1.5.2/enforcement.%s.html", hex))
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", hex, err

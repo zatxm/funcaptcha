@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	http "github.com/bogdanfinn/fhttp"
+	tls_client "github.com/bogdanfinn/tls-client"
 )
 
 type Session struct {
@@ -95,14 +96,14 @@ func StartChallenge(full_session, hex string) (*Session, error) {
 		Hex:          hex,
 	}
 	session.Headers = headers
-	session.Headers.Set("Referer", fmt.Sprintf("https://tcr9i.chat.openai.com/fc/assets/ec-game-core/game-core/1.13.0/standard/index.html?session=%s", strings.Replace(full_session, "|", "&", -1)))
+	session.Headers.Set("Referer", fmt.Sprintf("https://client-api.arkoselabs.com/fc/assets/ec-game-core/game-core/1.13.0/standard/index.html?session=%s", strings.Replace(full_session, "|", "&", -1)))
 	session.ChallengeLogger = challengeLogger{
 		Sid:           sid,
 		SessionToken:  session_token,
 		AnalyticsTier: 40,
 		RenderType:    "canvas",
 	}
-	err := session.log("", 0, "Site URL", fmt.Sprintf("https://tcr9i.chat.openai.com/v2/1.5.2/enforcement.%s.html", hex))
+	err := session.log("", 0, "Site URL", fmt.Sprintf("https://client-api.arkoselabs.com/v2/1.5.2/enforcement.%s.html", hex))
 	return &session, err
 }
 
@@ -118,7 +119,7 @@ func (c *Session) RequestChallenge(isAudioGame bool) error {
 	}
 	payload := jsonToForm(toJSON(challenge_request))
 
-	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/gfct/", strings.NewReader(payload))
+	req, _ := http.NewRequest(http.MethodPost, "https://client-api.arkoselabs.com/fc/gfct/", strings.NewReader(payload))
 	req.Header = c.Headers
 	req.Header.Set("X-NewRelic-Timestamp", getTimeStamp())
 	resp, err := client.Do(req)
@@ -179,7 +180,7 @@ func (c *Session) SubmitAnswer(index int) error {
 	}
 	submission.Guess = encrypt(fmt.Sprintf(`[{"index":%d}]`, index), c.SessionToken)
 	payload := jsonToForm(toJSON(submission))
-	req, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/ca/", strings.NewReader(payload))
+	req, _ := http.NewRequest(http.MethodPost, "https://client-api.arkoselabs.com/fc/ca/", strings.NewReader(payload))
 	req.Header = c.Headers
 	req.Header.Set("X-Requested-ID", getRequestId(c.SessionToken))
 	req.Header.Set("X-NewRelic-Timestamp", getTimeStamp())
@@ -204,6 +205,11 @@ func (c *Session) SubmitAnswer(index int) error {
 	if !response.Solved {
 		return fmt.Errorf("incorrect guess: %s", response.IncorrectGuess)
 	}
+	// Set new client
+	client, _ = tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	if proxy != "" {
+		client.SetProxy(proxy)
+	}
 	return nil
 }
 
@@ -216,7 +222,7 @@ func (c *Session) log(game_token string, game_type int, category, action string)
 	v.Category = category
 	v.Action = action
 
-	request, _ := http.NewRequest(http.MethodPost, "https://tcr9i.chat.openai.com/fc/a/", strings.NewReader(jsonToForm(toJSON(v))))
+	request, _ := http.NewRequest(http.MethodPost, "https://client-api.arkoselabs.com/fc/a/", strings.NewReader(jsonToForm(toJSON(v))))
 	request.Header = headers
 	resp, err := client.Do(request)
 	if err != nil {
