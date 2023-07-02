@@ -39,15 +39,39 @@ func init() {
 	}
 }
 
+//goland:noinspection GoUnhandledErrorResult
+func init() {
+	cli, _ := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	client = &cli
+	proxy := os.Getenv("http_proxy")
+	if proxy != "" {
+		(*client).SetProxy(proxy)
+	}
+}
+
+//goland:noinspection GoUnusedExportedFunction
 func SetTLSClient(cli *tls_client.HttpClient) {
 	client = cli
 }
-func GetOpenAIToken() (string, string, error) { // Returns token, hex, error
+
+func GetOpenAIToken() (string, string, error) {
 	hex := randomHex(32)
-	bda := getBDA(hex)
-	bda = base64.StdEncoding.EncodeToString([]byte(bda))
+	token, err := sendRequest(hex, "")
+	return token, hex, err
+}
+
+func GetOpenAITokenWithBx(bx string) (string, error) {
+	hex := randomHex(32)
+	return sendRequest(hex, getBdaWitBx(bx))
+}
+
+//goland:noinspection SpellCheckingInspection,GoUnhandledErrorResult
+func sendRequest(hex, bda string) (string, error) {
+	if bda == "" {
+		bda = getBDA(hex)
+	}
 	form := url.Values{
-		"bda":          {bda},
+		"bda":          {base64.StdEncoding.EncodeToString([]byte(bda))},
 		"public_key":   {"35536E1E-65B4-4D96-9D97-6ADB7EFF8147"},
 		"site":         {"https://chat.openai.com"},
 		"userbrowser":  {bv},
@@ -67,12 +91,12 @@ func GetOpenAIToken() (string, string, error) { // Returns token, hex, error
 	req.Header.Set("User-Agent", bv)
 	resp, err := (*client).Do(req)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return "", "", errors.New("status code " + resp.Status)
+		return "", errors.New("status code " + resp.Status)
 	}
 
 	type arkoseResponse struct {
@@ -81,10 +105,10 @@ func GetOpenAIToken() (string, string, error) { // Returns token, hex, error
 	var arkose arkoseResponse
 	err = json.NewDecoder(resp.Body).Decode(&arkose)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	return arkose.Token, hex, nil
+	return arkose.Token, nil
 }
 
 //goland:noinspection SpellCheckingInspection
@@ -116,8 +140,21 @@ func getBDA(hex string) string {
 		getFe(),
 		getIfeHash(),
 	)
+	bt := getBt()
+	bw := getBw(bt)
+	return encrypt(bx, bv+bw)
+}
 
-	bt := time.Now().UnixMicro() / 1000000
-	bw := strconv.FormatInt(bt-(bt%21600), 10)
+func getBt() int64 {
+	return time.Now().UnixMicro() / 1000000
+}
+
+func getBw(bt int64) string {
+	return strconv.FormatInt(bt-(bt%21600), 10)
+}
+
+func getBdaWitBx(bx string) string {
+	bt := getBt()
+	bw := getBw(bt)
 	return encrypt(bx, bv+bw)
 }
