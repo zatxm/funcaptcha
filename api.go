@@ -42,7 +42,7 @@ func init() {
 func SetTLSClient(cli *tls_client.HttpClient) {
 	client = cli
 }
-func GetOpenAIToken() (string, string, error) {
+func GetOpenAIToken() (string, string, error) { // Returns token, hex, error
 	hex := randomHex(32)
 	bda := getBDA(hex)
 	bda = base64.StdEncoding.EncodeToString([]byte(bda))
