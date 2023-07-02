@@ -15,5 +15,5 @@ func main() {
 }
 ```
 
-API:
+## API:
 You can download the binary from releases or `go run cmd/api/main.go`
