@@ -60,9 +60,10 @@ func GetOpenAIToken() (string, string, error) {
 	return token, hex, err
 }
 
-func GetOpenAITokenWithBx(bx string) (string, error) {
+func GetOpenAITokenWithBx(bx string) (string, string, error) {
 	hex := randomHex(32)
-	return sendRequest(hex, getBdaWitBx(bx))
+	token, err := sendRequest(hex, getBdaWitBx(bx))
+	return token, hex, err
 }
 
 //goland:noinspection SpellCheckingInspection,GoUnhandledErrorResult
