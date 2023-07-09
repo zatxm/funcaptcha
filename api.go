@@ -147,7 +147,7 @@ func getBDA(hex string) string {
 	)
 	bt := getBt()
 	bw := getBw(bt)
-	return encrypt(bx, bv+bw)
+	return Encrypt(bx, bv+bw)
 }
 
 func getBt() int64 {
@@ -161,5 +161,5 @@ func getBw(bt int64) string {
 func getBdaWitBx(bx string) string {
 	bt := getBt()
 	bw := getBw(bt)
-	return encrypt(bx, bv+bw)
+	return Encrypt(bx, bv+bw)
 }

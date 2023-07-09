@@ -72,7 +72,7 @@ func getTimeStamp() string {
 
 func getRequestId(sessionId string) string {
 	pwd := fmt.Sprintf("REQUESTED%sID", sessionId)
-	return encrypt(`{"sc":[147,307]}`, pwd)
+	return Encrypt(`{"sc":[147,307]}`, pwd)
 }
 
 func randomHex(length int) string {

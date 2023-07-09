@@ -73,7 +73,7 @@ func captchaVerify(c *gin.Context) {
 		return
 	}
 	// Verify the captcha
-	err := request.Session.SubmitAnswer(request.Index)
+	err := request.Session.SubmitAnswer(request.Index, false)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return

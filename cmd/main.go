@@ -42,7 +42,7 @@ func main() {
 		log.Fatalf("error reading input: %v\n", err)
 	}
 	log.Println(index)
-	err = session.SubmitAnswer(index)
+	err = session.SubmitAnswer(index, false)
 	if err != nil {
 		log.Fatalf("error submitting answer: %v\n", err)
 	}
