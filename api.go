@@ -110,7 +110,7 @@ func sendRequest(hex, bda string) (string, error) {
 	}
 	// Check if rid is empty
 	if !strings.Contains(arkose.Token, "sup=1|rid=") {
-		return "", errors.New("captcha required")
+		return arkose.Token, errors.New("captcha required")
 	}
 
 	return arkose.Token, nil
