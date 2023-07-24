@@ -54,20 +54,23 @@ func SetTLSClient(cli *tls_client.HttpClient) {
 	client = cli
 }
 
-func GetOpenAIToken() (string, string, error) {
+func GetOpenAIToken(proxy string) (string, string, error) {
 	hex := randomHex(32)
-	token, err := sendRequest(hex, "")
+	token, err := sendRequest(hex, "", proxy)
 	return token, hex, err
 }
 
-func GetOpenAITokenWithBx(bx string) (string, string, error) {
+func GetOpenAITokenWithBx(bx string, proxy string) (string, string, error) {
 	hex := randomHex(32)
-	token, err := sendRequest(hex, getBdaWitBx(bx))
+	token, err := sendRequest(hex, getBdaWitBx(bx), proxy)
 	return token, hex, err
 }
 
 //goland:noinspection SpellCheckingInspection,GoUnhandledErrorResult
-func sendRequest(hex, bda string) (string, error) {
+func sendRequest(hex, bda string, proxy string) (string, error) {
+	if proxy != "" {
+		(*client).SetProxy(proxy)
+	}
 	if bda == "" {
 		bda = getBDA(hex)
 	}
