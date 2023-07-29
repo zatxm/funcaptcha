@@ -135,6 +135,9 @@ func Decrypt(data string, key string) string {
 
 func AesDecrypt(baseText string, password string) (string, error) {
 	encBytes, err := base64.StdEncoding.DecodeString(baseText)
+	if err != nil {
+		return "", err
+	}
 	var encData encryptionData
 	err = json.Unmarshal(encBytes, &encData)
 	if err != nil {
@@ -145,6 +148,9 @@ func AesDecrypt(baseText string, password string) (string, error) {
 		return "", err
 	}
 	salt, err := hex.DecodeString(encData.S)
+	if err != nil {
+		return "", err
+	}
 	key, iv, err := DefaultEvpKDF([]byte(password), salt)
 	if err != nil {
 		return "", err
