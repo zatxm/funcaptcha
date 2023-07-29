@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net/url"
 	"os"
@@ -58,7 +57,7 @@ type HARData struct {
 }
 
 func readHAR() {
-	file, err := ioutil.ReadFile("chatgpt.har")
+	file, err := os.ReadFile("chatgpt.har")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -89,7 +88,7 @@ func readHAR() {
 	arkHeader = make(http.Header)
 	for _, h := range arkReq.Request.Headers {
 		// arkHeader except cookie & content-length
-		if strings.EqualFold(h.Name, "content-length") == false && strings.EqualFold(h.Name, "cookie") == false && strings.HasPrefix(h.Name, ":") == false {
+		if !strings.EqualFold(h.Name, "content-length") && !strings.EqualFold(h.Name, "cookie") && !strings.HasPrefix(h.Name, ":") {
 			arkHeader.Set(h.Name, h.Value)
 			if strings.EqualFold(h.Name, "user-agent") {
 				bv = h.Value
