@@ -18,8 +18,9 @@ import (
 	tls_client "github.com/bogdanfinn/tls-client"
 )
 
-var initVer, initHex, arkURL, arkBx, arkBody string
+var initVer, initHex, arkURL, arkBx string
 var arkHeader http.Header
+var arkBody url.Values
 var (
 	jar     = tls_client.NewCookieJar()
 	options = []tls_client.HttpClientOption{
@@ -95,7 +96,7 @@ func readHAR() {
 			}
 		}
 	}
-	arkBody = ""
+	arkBody = make(url.Values)
 	for _, p := range arkReq.Request.PostData.Params {
 		// arkBody except bda & rnd
 		if p.Name == "bda" {
@@ -105,7 +106,11 @@ func readHAR() {
 			}
 			arkBx = Decrypt(cipher, bv+bw)
 		} else if p.Name != "rnd" {
-			arkBody += "&" + p.Name + "=" + p.Value
+			query, err := url.QueryUnescape(p.Value)
+			if err != nil {
+				panic(err)
+			}
+			arkBody.Set(p.Name, query)
 		}
 	}
 }
@@ -149,7 +154,7 @@ func GetOpenAITokenWithBx(bx string, puid string, proxy string) (string, string,
 
 //goland:noinspection SpellCheckingInspection,GoUnhandledErrorResult
 func sendRequest(bda string, puid string, proxy string) (string, error) {
-	if arkBx == "" || arkBody == "" || len(arkHeader) == 0 {
+	if arkBx == "" || len(arkBody) == 0 || len(arkHeader) == 0 {
 		return "", errors.New("a valid HAR file required")
 	}
 	if proxy != "" {
@@ -158,15 +163,15 @@ func sendRequest(bda string, puid string, proxy string) (string, error) {
 	if bda == "" {
 		bda = getBDA()
 	}
-	form := "bda=" + url.QueryEscape(base64.StdEncoding.EncodeToString([]byte(bda))) + arkBody + "&rnd=" + strconv.FormatFloat(rand.Float64(), 'f', -1, 64)
-	req, _ := http.NewRequest(http.MethodPost, arkURL, strings.NewReader(form))
+	arkBody.Set("bda", base64.StdEncoding.EncodeToString([]byte(bda)))
+	arkBody.Set("rnd", strconv.FormatFloat(rand.Float64(), 'f', -1, 64))
+	req, _ := http.NewRequest(http.MethodPost, arkURL, strings.NewReader(arkBody.Encode()))
 	req.Header = arkHeader.Clone()
 	req.Header.Set("cookie", "_puid="+puid+";")
 	resp, err := (*client).Do(req)
 	if err != nil {
 		return "", err
 	}
-
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return "", errors.New("status code " + resp.Status)
