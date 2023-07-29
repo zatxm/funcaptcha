@@ -85,7 +85,6 @@ func readHAR() {
 		panic(err)
 	}
 	bw := getBw(t.Unix())
-	re := regexp.MustCompile(`\/v2\/\S*?\/enforcement\.\S*?\.`)
 	arkHeader = make(http.Header)
 	for _, h := range arkReq.Request.Headers {
 		// arkHeader except cookie & content-length
@@ -93,8 +92,6 @@ func readHAR() {
 			arkHeader.Set(h.Name, h.Value)
 			if strings.EqualFold(h.Name, "user-agent") {
 				bv = h.Value
-			} else if strings.EqualFold(h.Name, "referer") {
-				arkHeader.Set(h.Name, re.ReplaceAllString(h.Value, "/v2/"+initVer+"/enforcement."+initHex+`.`))
 			}
 		}
 	}
@@ -107,13 +104,10 @@ func readHAR() {
 				panic(err)
 			}
 			arkBx = Decrypt(cipher, bv+bw)
-			arkBx = re.ReplaceAllString(arkBx, "/v2/"+initVer+"/enforcement."+initHex+`.`)
 		} else if p.Name != "rnd" {
 			arkBody += "&" + p.Name + "=" + p.Value
 		}
 	}
-	re = regexp.MustCompile(`&capi_version=\S*?&`)
-	arkBody = re.ReplaceAllString(arkBody, `&capi_version=`+initVer+`&`)
 }
 
 //goland:noinspection GoUnhandledErrorResult
