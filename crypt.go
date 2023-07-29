@@ -123,17 +123,28 @@ func pKCS5Padding(src []byte, blockSize int) []byte {
 	return append(src, padtext...)
 }
 
-func AesDecrypt(cipherText string, password string) (string, error) {
-	data, err := base64.StdEncoding.DecodeString(cipherText)
+func Decrypt(data string, key string) string {
+	decDataText, err := AesDecrypt(data, key)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return decDataText
+}
+
+func AesDecrypt(baseText string, password string) (string, error) {
+	encBytes, err := base64.StdEncoding.DecodeString(baseText)
+	var encData encryptionData
+	err = json.Unmarshal(encBytes, &encData)
 	if err != nil {
 		return "", err
 	}
-	if string(data[:8]) != "Salted__" {
-		return "", errors.New("invalid crypto js aes encryption")
+	cipherBytes, err := base64.StdEncoding.DecodeString(encData.Ct)
+	if err != nil {
+		return "", err
 	}
-
-	salt := data[8:16]
-	cipherBytes := data[16:]
+	salt, err := hex.DecodeString(encData.S)
 	key, iv, err := DefaultEvpKDF([]byte(password), salt)
 	if err != nil {
 		return "", err
