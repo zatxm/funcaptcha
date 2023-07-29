@@ -57,7 +57,7 @@ type HARData struct {
 }
 
 func readHAR() {
-	file, err := os.ReadFile("chatgpt.har")
+	file, err := os.ReadFile("chat.openai.com.har")
 	if err != nil {
 		fmt.Println(err)
 		return
