@@ -156,6 +156,9 @@ func sendRequest(bda string, puid string, proxy string) (string, error) {
 	if arkBx == "" || len(arkBody) == 0 || len(arkHeader) == 0 {
 		return "", errors.New("a valid HAR file required")
 	}
+	if puid == "" {
+		return "", errors.New("a valid PUID required")
+	}
 	if proxy != "" {
 		(*client).SetProxy(proxy)
 	}
