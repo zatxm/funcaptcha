@@ -126,16 +126,6 @@ func init() {
 	}
 }
 
-//goland:noinspection GoUnhandledErrorResult
-func init() {
-	cli, _ := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
-	client = &cli
-	proxy := os.Getenv("http_proxy")
-	if proxy != "" {
-		(*client).SetProxy(proxy)
-	}
-}
-
 //goland:noinspection GoUnusedExportedFunction
 func SetTLSClient(cli *tls_client.HttpClient) {
 	client = cli
@@ -156,9 +146,6 @@ func sendRequest(bda string, puid string, proxy string) (string, error) {
 	if arkBx == "" || len(arkBody) == 0 || len(arkHeader) == 0 {
 		return "", errors.New("a valid HAR file required")
 	}
-	if puid == "" {
-		return "", errors.New("a valid PUID required")
-	}
 	if proxy != "" {
 		(*client).SetProxy(proxy)
 	}
@@ -169,7 +156,9 @@ func sendRequest(bda string, puid string, proxy string) (string, error) {
 	arkBody.Set("rnd", strconv.FormatFloat(rand.Float64(), 'f', -1, 64))
 	req, _ := http.NewRequest(http.MethodPost, arkURL, strings.NewReader(arkBody.Encode()))
 	req.Header = arkHeader.Clone()
-	req.Header.Set("cookie", "_puid="+puid+";")
+	if puid != "" {
+		req.Header.Set("cookie", "_puid="+puid+";")
+	}
 	resp, err := (*client).Do(req)
 	if err != nil {
 		return "", err
