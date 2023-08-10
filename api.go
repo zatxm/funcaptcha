@@ -85,6 +85,7 @@ func readHAR() {
 		panic(err)
 	}
 	bw := getBw(t.Unix())
+	fallbackBw := getBw(t.Unix() - 21600)
 	arkHeader = make(http.Header)
 	for _, h := range arkReq.Request.Headers {
 		// arkHeader except cookie & content-length
@@ -103,7 +104,7 @@ func readHAR() {
 			if err != nil {
 				panic(err)
 			}
-			arkBx = Decrypt(cipher, bv+bw)
+			arkBx = Decrypt(cipher, bv+bw, bv+fallbackBw)
 		} else if p.Name != "rnd" {
 			query, err := url.QueryUnescape(p.Value)
 			if err != nil {
