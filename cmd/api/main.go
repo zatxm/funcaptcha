@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/acheong08/endless"
-	"github.com/acheong08/funcaptcha"
+	"github.com/xqdoo00o/funcaptcha"
 	gin "github.com/gin-gonic/gin"
 )
 

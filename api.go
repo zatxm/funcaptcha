@@ -59,7 +59,6 @@ type HARData struct {
 func readHAR() {
 	file, err := os.ReadFile("chat.openai.com.har")
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 	var harFile HARData
@@ -113,6 +112,7 @@ func readHAR() {
 			arkBody.Set(p.Name, query)
 		}
 	}
+	println("success read HAR file")
 }
 
 //goland:noinspection GoUnhandledErrorResult
