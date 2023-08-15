@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	token, _, _ := funcaptcha.GetOpenAIToken("", "")
+	token, _ := funcaptcha.GetOpenAIToken("", "")
 	fmt.Println(token)
 }
 ```

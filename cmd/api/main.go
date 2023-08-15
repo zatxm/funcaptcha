@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/acheong08/endless"
-	"github.com/xqdoo00o/funcaptcha"
 	gin "github.com/gin-gonic/gin"
+	"github.com/xqdoo00o/funcaptcha"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func main() {
 }
 
 func captchaStart(c *gin.Context) {
-	token, hex, err := funcaptcha.GetOpenAITokenWithBx(`[{"key":"enhanced_fp","value":[{"key":"navigator_battery_charging","value":true}]},{"key":"fe","value":["DNT:1","L:zh-CN","D:24","PR:1","S:1920,1080","AS:1920,1080","TO:-480","SS:true","LS:true","IDB:true","B:false","ODB:true","CPUC:unknown","PK:Linux x86_64","CFP:11866 se","H:16","SWF:false"]}]`, "", "")
+	token, err := funcaptcha.GetOpenAITokenWithBx(`[{"key":"enhanced_fp","value":[{"key":"navigator_battery_charging","value":true}]},{"key":"fe","value":["DNT:1","L:zh-CN","D:24","PR:1","S:1920,1080","AS:1920,1080","TO:-480","SS:true","LS:true","IDB:true","B:false","ODB:true","CPUC:unknown","PK:Linux x86_64","CFP:11866 se","H:16","SWF:false"]}]`, "", "")
 	if err == nil {
 		c.JSON(200, gin.H{"token": token, "status": "success"})
 		return
@@ -31,6 +31,7 @@ func captchaStart(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+	hex := "cd12da708fe6cbe6e068918c38de2ad9"
 	session, err := funcaptcha.StartChallenge(token, hex)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "unable to log requests"})
