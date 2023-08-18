@@ -127,7 +127,7 @@ func Decrypt(data string, password string, fallbackPass string) string {
 	decDataText, err := AesDecrypt(data, password, fallbackPass)
 
 	if err != nil {
-		panic(err)
+		println(err.Error())
 	}
 
 	return decDataText

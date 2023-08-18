@@ -112,7 +112,11 @@ func readHAR() {
 			arkBody.Set(p.Name, query)
 		}
 	}
-	println("success read HAR file")
+	if arkBx != "" {
+		println("success read HAR file")
+	} else {
+		println("failed to decrypt HAR file")
+	}
 }
 
 //goland:noinspection GoUnhandledErrorResult
