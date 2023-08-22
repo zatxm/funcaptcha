@@ -17,7 +17,7 @@ import (
 	tls_client "github.com/bogdanfinn/tls-client"
 )
 
-var initVer, initHex, arkURL, arkBx string
+var initVer, initHex, arkURL, arkBx, arkCookies string
 var arkHeader http.Header
 var arkBody url.Values
 var (
@@ -37,6 +37,11 @@ type kvPair struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }
+type cookie struct {
+	Name    string `json:"name"`
+	Value   string `json:"value"`
+	Expires string `json:"expires"`
+}
 type postBody struct {
 	Params []kvPair `json:"params"`
 }
@@ -44,6 +49,7 @@ type request struct {
 	URL      string   `json:"url"`
 	Headers  []kvPair `json:"headers,omitempty"`
 	PostData postBody `json:"postData,omitempty"`
+	Cookies  []cookie `json:"cookies,omitempty"`
 }
 type entry struct {
 	StartedDateTime string  `json:"startedDateTime"`
@@ -93,6 +99,13 @@ func readHAR() {
 			if strings.EqualFold(h.Name, "user-agent") {
 				bv = h.Value
 			}
+		}
+	}
+	arkCookies = ""
+	for _, cookie := range arkReq.Request.Cookies {
+		expire, _ := time.Parse(time.RFC3339, cookie.Expires)
+		if expire.After(time.Now().Add(time.Hour * 24 * 7)) {
+			arkCookies += cookie.Name + "=" + cookie.Value + ";"
 		}
 	}
 	arkBody = make(url.Values)
@@ -162,7 +175,7 @@ func sendRequest(bda string, puid string, proxy string) (string, error) {
 	req, _ := http.NewRequest(http.MethodPost, arkURL, strings.NewReader(arkBody.Encode()))
 	req.Header = arkHeader.Clone()
 	if puid != "" {
-		req.Header.Set("cookie", "_puid="+puid+";")
+		req.Header.Set("cookie", arkCookies+"_puid="+puid+";")
 	}
 	resp, err := (*client).Do(req)
 	if err != nil {
