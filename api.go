@@ -17,7 +17,10 @@ import (
 	tls_client "github.com/bogdanfinn/tls-client"
 )
 
-var initVer, initHex, arkURL, arkBx, arkCookies string
+const arkPreURL = "https://tcr9i.chat.openai.com/fc/gt2/"
+
+var initVer, initHex, arkURL, arkBx string
+var arkCookies []*http.Cookie
 var arkHeader http.Header
 var arkBody url.Values
 var (
@@ -75,7 +78,7 @@ func readHAR() {
 	}
 	var arkReq entry
 	for _, v := range harFile.Log.Entries {
-		if strings.HasPrefix(v.Request.URL, "https://tcr9i.chat.openai.com/fc/gt2/") {
+		if strings.HasPrefix(v.Request.URL, arkPreURL) {
 			arkReq = v
 			arkURL = v.Request.URL
 			break
@@ -101,11 +104,11 @@ func readHAR() {
 			}
 		}
 	}
-	arkCookies = ""
+	arkCookies = []*http.Cookie{}
 	for _, cookie := range arkReq.Request.Cookies {
 		expire, _ := time.Parse(time.RFC3339, cookie.Expires)
-		if expire.After(time.Now().Add(time.Hour * 24 * 7)) {
-			arkCookies += cookie.Name + "=" + cookie.Value + ";"
+		if expire.After(time.Now()) {
+			arkCookies = append(arkCookies, &http.Cookie{Name: cookie.Name, Value: cookie.Value, Expires: expire.UTC()})
 		}
 	}
 	arkBody = make(url.Values)
@@ -138,6 +141,8 @@ func init() {
 	initHex = "cd12da708fe6cbe6e068918c38de2ad9" // should be fixed associated with version.
 	readHAR()
 	cli, _ := tls_client.NewHttpClient(tls_client.NewNoopLogger(), options...)
+	u, _ := url.Parse(arkPreURL)
+	cli.GetCookieJar().SetCookies(u, arkCookies)
 	client = &cli
 	if proxy != "" {
 		(*client).SetProxy(proxy)
@@ -146,6 +151,8 @@ func init() {
 
 //goland:noinspection GoUnusedExportedFunction
 func SetTLSClient(cli *tls_client.HttpClient) {
+	u, _ := url.Parse(arkPreURL)
+	(*cli).GetCookieJar().SetCookies(u, arkCookies)
 	client = cli
 }
 
@@ -175,7 +182,7 @@ func sendRequest(bda string, puid string, proxy string) (string, error) {
 	req, _ := http.NewRequest(http.MethodPost, arkURL, strings.NewReader(arkBody.Encode()))
 	req.Header = arkHeader.Clone()
 	if puid != "" {
-		req.Header.Set("cookie", arkCookies+"_puid="+puid+";")
+		req.Header.Set("cookie", "_puid="+puid+";")
 	}
 	resp, err := (*client).Do(req)
 	if err != nil {
