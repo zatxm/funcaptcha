@@ -114,6 +114,7 @@ func readHAR() {
 						arkCookies = append(arkCookies, &http.Cookie{Name: cookie.Name, Value: cookie.Value, Expires: expire.UTC()})
 					}
 				}
+				var arkType string
 				tmpArk.arkBody = make(url.Values)
 				for _, p := range v.Request.PostData.Params {
 					// arkBody except bda & rnd
@@ -131,15 +132,17 @@ func readHAR() {
 						tmpArk.arkBody.Set(p.Name, query)
 						if p.Name == "site" {
 							if strings.Contains(p.Value, "auth0.") {
+								arkType = "auth"
 								authArk = &tmpArk
 							} else if strings.Contains(p.Value, "chat.") {
+								arkType = "chat"
 								chatArk = &tmpArk
 							}
 						}
 					}
 				}
 				if tmpArk.arkBx != "" {
-					println("success read HAR file")
+					println("success read " + arkType + " arkose")
 				} else {
 					println("failed to decrypt HAR file")
 				}
@@ -200,7 +203,7 @@ func sendRequest(arkType int, bda string, puid string, proxy string) (string, er
 	} else {
 		tmpArk = chatArk
 	}
-	if tmpArk.arkBx == "" || len(tmpArk.arkBody) == 0 || len(tmpArk.arkHeader) == 0 {
+	if tmpArk == nil || tmpArk.arkBx == "" || len(tmpArk.arkBody) == 0 || len(tmpArk.arkHeader) == 0 {
 		return "", errors.New("a valid HAR file required")
 	}
 	if proxy != "" {
