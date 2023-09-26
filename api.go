@@ -19,10 +19,17 @@ import (
 
 const arkPreURL = "https://tcr9i.chat.openai.com/fc/gt2/"
 
-var initVer, initHex, arkURL, arkBx string
+var initVer, initHex string
+
 var arkCookies []*http.Cookie
-var arkHeader http.Header
-var arkBody url.Values
+
+type arkReq struct {
+	arkURL    string
+	arkBx     string
+	arkHeader http.Header
+	arkBody   url.Values
+}
+
 var (
 	jar     = tls_client.NewCookieJar()
 	options = []tls_client.HttpClientOption{
@@ -32,8 +39,10 @@ var (
 		tls_client.WithNotFollowRedirects(),
 		tls_client.WithCookieJar(jar),
 	}
-	client *tls_client.HttpClient
-	proxy  = os.Getenv("http_proxy")
+	client  *tls_client.HttpClient
+	proxy   = os.Getenv("http_proxy")
+	authArk *arkReq
+	chatArk *arkReq
 )
 
 type kvPair struct {
@@ -76,63 +85,70 @@ func readHAR() {
 		println("Error: not a HAR file!")
 		return
 	}
-	var arkReq entry
 	for _, v := range harFile.Log.Entries {
 		if strings.HasPrefix(v.Request.URL, arkPreURL) {
-			arkReq = v
-			arkURL = v.Request.URL
-			break
-		}
-	}
-	if arkReq.StartedDateTime == "" {
-		println("Error: no arkose request!")
-		return
-	}
-	t, err := time.Parse(time.RFC3339, arkReq.StartedDateTime)
-	if err != nil {
-		panic(err)
-	}
-	bw := getBw(t.Unix())
-	fallbackBw := getBw(t.Unix() - 21600)
-	arkHeader = make(http.Header)
-	for _, h := range arkReq.Request.Headers {
-		// arkHeader except cookie & content-length
-		if !strings.EqualFold(h.Name, "content-length") && !strings.EqualFold(h.Name, "cookie") && !strings.HasPrefix(h.Name, ":") {
-			arkHeader.Set(h.Name, h.Value)
-			if strings.EqualFold(h.Name, "user-agent") {
-				bv = h.Value
+			if authArk == nil || chatArk == nil {
+				var tmpArk arkReq
+				tmpArk.arkURL = v.Request.URL
+				if v.StartedDateTime == "" {
+					println("Error: no arkose request!")
+					continue
+				}
+				t, _ := time.Parse(time.RFC3339, v.StartedDateTime)
+				bw := getBw(t.Unix())
+				fallbackBw := getBw(t.Unix() - 21600)
+				tmpArk.arkHeader = make(http.Header)
+				for _, h := range v.Request.Headers {
+					// arkHeader except cookie & content-length
+					if !strings.EqualFold(h.Name, "content-length") && !strings.EqualFold(h.Name, "cookie") && !strings.HasPrefix(h.Name, ":") {
+						tmpArk.arkHeader.Set(h.Name, h.Value)
+						if strings.EqualFold(h.Name, "user-agent") {
+							bv = h.Value
+						}
+					}
+				}
+				arkCookies = []*http.Cookie{}
+				for _, cookie := range v.Request.Cookies {
+					expire, _ := time.Parse(time.RFC3339, cookie.Expires)
+					if expire.After(time.Now()) {
+						arkCookies = append(arkCookies, &http.Cookie{Name: cookie.Name, Value: cookie.Value, Expires: expire.UTC()})
+					}
+				}
+				tmpArk.arkBody = make(url.Values)
+				for _, p := range v.Request.PostData.Params {
+					// arkBody except bda & rnd
+					if p.Name == "bda" {
+						cipher, err := url.QueryUnescape(p.Value)
+						if err != nil {
+							panic(err)
+						}
+						tmpArk.arkBx = Decrypt(cipher, bv+bw, bv+fallbackBw)
+					} else if p.Name != "rnd" {
+						query, err := url.QueryUnescape(p.Value)
+						if err != nil {
+							panic(err)
+						}
+						tmpArk.arkBody.Set(p.Name, query)
+						if p.Name == "site" {
+							if strings.Contains(p.Value, "auth0.") {
+								authArk = &tmpArk
+							} else if strings.Contains(p.Value, "chat.") {
+								chatArk = &tmpArk
+							}
+						}
+					}
+				}
+				if tmpArk.arkBx != "" {
+					println("success read HAR file")
+				} else {
+					println("failed to decrypt HAR file")
+				}
+			} else {
+				break
 			}
 		}
 	}
-	arkCookies = []*http.Cookie{}
-	for _, cookie := range arkReq.Request.Cookies {
-		expire, _ := time.Parse(time.RFC3339, cookie.Expires)
-		if expire.After(time.Now()) {
-			arkCookies = append(arkCookies, &http.Cookie{Name: cookie.Name, Value: cookie.Value, Expires: expire.UTC()})
-		}
-	}
-	arkBody = make(url.Values)
-	for _, p := range arkReq.Request.PostData.Params {
-		// arkBody except bda & rnd
-		if p.Name == "bda" {
-			cipher, err := url.QueryUnescape(p.Value)
-			if err != nil {
-				panic(err)
-			}
-			arkBx = Decrypt(cipher, bv+bw, bv+fallbackBw)
-		} else if p.Name != "rnd" {
-			query, err := url.QueryUnescape(p.Value)
-			if err != nil {
-				panic(err)
-			}
-			arkBody.Set(p.Name, query)
-		}
-	}
-	if arkBx != "" {
-		println("success read HAR file")
-	} else {
-		println("failed to decrypt HAR file")
-	}
+
 }
 
 //goland:noinspection GoUnhandledErrorResult
@@ -156,31 +172,47 @@ func SetTLSClient(cli *tls_client.HttpClient) {
 	client = cli
 }
 
+func GetOpenAIAuthToken(puid string, proxy string) (string, error) {
+	token, err := sendRequest(0, "", puid, proxy)
+	return token, err
+}
+
+func GetOpenAIAuthTokenWithBx(bx string, puid string, proxy string) (string, error) {
+	token, err := sendRequest(0, getBdaWitBx(bx), puid, proxy)
+	return token, err
+}
+
 func GetOpenAIToken(puid string, proxy string) (string, error) {
-	token, err := sendRequest("", puid, proxy)
+	token, err := sendRequest(1, "", puid, proxy)
 	return token, err
 }
 
 func GetOpenAITokenWithBx(bx string, puid string, proxy string) (string, error) {
-	token, err := sendRequest(getBdaWitBx(bx), puid, proxy)
+	token, err := sendRequest(1, getBdaWitBx(bx), puid, proxy)
 	return token, err
 }
 
 //goland:noinspection SpellCheckingInspection,GoUnhandledErrorResult
-func sendRequest(bda string, puid string, proxy string) (string, error) {
-	if arkBx == "" || len(arkBody) == 0 || len(arkHeader) == 0 {
+func sendRequest(arkType int, bda string, puid string, proxy string) (string, error) {
+	var tmpArk *arkReq
+	if arkType == 0 {
+		tmpArk = authArk
+	} else {
+		tmpArk = chatArk
+	}
+	if tmpArk.arkBx == "" || len(tmpArk.arkBody) == 0 || len(tmpArk.arkHeader) == 0 {
 		return "", errors.New("a valid HAR file required")
 	}
 	if proxy != "" {
 		(*client).SetProxy(proxy)
 	}
 	if bda == "" {
-		bda = getBDA()
+		bda = getBDA(arkType)
 	}
-	arkBody.Set("bda", base64.StdEncoding.EncodeToString([]byte(bda)))
-	arkBody.Set("rnd", strconv.FormatFloat(rand.Float64(), 'f', -1, 64))
-	req, _ := http.NewRequest(http.MethodPost, arkURL, strings.NewReader(arkBody.Encode()))
-	req.Header = arkHeader.Clone()
+	tmpArk.arkBody.Set("bda", base64.StdEncoding.EncodeToString([]byte(bda)))
+	tmpArk.arkBody.Set("rnd", strconv.FormatFloat(rand.Float64(), 'f', -1, 64))
+	req, _ := http.NewRequest(http.MethodPost, tmpArk.arkURL, strings.NewReader(tmpArk.arkBody.Encode()))
+	req.Header = tmpArk.arkHeader.Clone()
 	if puid != "" {
 		req.Header.Set("cookie", "_puid="+puid+";")
 	}
@@ -210,8 +242,13 @@ func sendRequest(bda string, puid string, proxy string) (string, error) {
 }
 
 //goland:noinspection SpellCheckingInspection
-func getBDA() string {
-	bx := arkBx
+func getBDA(arkType int) string {
+	var bx string
+	if arkType == 0 {
+		bx = authArk.arkBx
+	} else {
+		bx = chatArk.arkBx
+	}
 	if bx == "" {
 		bx = fmt.Sprintf(bx_template,
 			getF(),
