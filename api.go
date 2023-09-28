@@ -15,6 +15,7 @@ import (
 
 	http "github.com/bogdanfinn/fhttp"
 	tls_client "github.com/bogdanfinn/tls-client"
+	"github.com/bogdanfinn/tls-client/profiles"
 )
 
 const arkPreURL = "https://tcr9i.chat.openai.com/fc/gt2/"
@@ -34,7 +35,7 @@ var (
 	jar     = tls_client.NewCookieJar()
 	options = []tls_client.HttpClientOption{
 		tls_client.WithTimeoutSeconds(360),
-		tls_client.WithClientProfile(tls_client.Chrome_112),
+		tls_client.WithClientProfile(profiles.Chrome_117),
 		tls_client.WithRandomTLSExtensionOrder(),
 		tls_client.WithNotFollowRedirects(),
 		tls_client.WithCookieJar(jar),
